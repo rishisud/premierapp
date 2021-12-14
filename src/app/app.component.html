@@ -1,0 +1,460 @@
+<div style="text-align: center;">
+  <ngb-alert type="info" [dismissible]="false">
+      <strong>Premier App</strong>
+  </ngb-alert>
+</div>
+<div *ngIf="barcode">
+  <ngb-alert type="success" [dismissible]="false">
+    Barcode Scanned Successfully <br> Device type is {{ barcode }}
+  </ngb-alert>
+</div>
+<div style="text-align: center;">
+	<button type="button" class="btn btn-warning" (click)="startScanner()">
+		Scan Barcode
+	</button>
+	<button type="button" class="or-button">OR</button>
+	<button type="button" class="btn btn-warning" (click)="showDevices()">
+		Manual Select
+	</button>
+</div><br>
+
+<div *ngIf="!barcodeRead && !selectDevices" class="input-group">
+ 
+  <div id="inputBarcode" style="position: static">
+      <div id="interactive" class="viewport"></div>
+  </div>
+</div>
+
+<div *ngIf="!barcodeRead && selectDevices" style="text-align: center;">
+	<form [formGroup]="deviceDetailsForm">
+		<select class="select" (change)="onSelectDevice($event);" formControlName="device_type" required>
+			<!-- <option value="null" disabled>Select Device</option>-->
+			<option value="null" selected></option>
+			<option value="ABC-abc-1234">REMI 4 RC</option>
+		</select>
+	</form>
+</div>
+
+<!--Display device image-->
+
+<div *ngIf="barcodeRead && !deviceSelected && !selectDevices" class="image-group">
+ <img src="assets/{{ barcode }}.jpg" class="device-image" alt="" loading="lazy">
+</div>
+
+<div *ngIf="!barcodeRead && deviceSelected && selectDevices" class="image-group">
+ <img src="assets/{{ device }}.jpg" class="device-image" alt="" loading="lazy">
+</div>
+
+<!--Confirm equipment-->
+
+<div *ngIf="barcodeRead && !deviceSelected && !selectDevices" class="question-holder">
+	<p class="qn-group">Confirm the Equipment with the above placed image</p>
+	<button class="back-button" (click)="checkDamageStatus()">Yes</button>&nbsp;
+	<button class="back-button" (click)="startScanner()">No</button>
+</div>
+
+<div *ngIf="!barcodeRead && deviceSelected && selectDevices" class="question-holder">
+	<p class="qn-group">Confirm the Equipment with the above placed image</p>
+	<button class="back-button" (click)="checkDamageStatus()">Yes</button>&nbsp;
+	<button class="back-button" (click)="startScanner()">No</button>
+</div>
+
+<!--Check physical condition of device-->
+
+<div *ngIf="checkDamage" class="question-holder">
+	<p class="qn-group">Check the Physical condition of the Equipment and confirm for any physical Damage of the Equipment</p>
+	<button class="back-button" (click)="powerOn()">No</button>
+	<button class="back-button" (click)="damageStatus()">Yes</button>&nbsp;
+	<button class="back-button" (click)="showDevices()">Back</button>
+</div>
+
+<!--Make damage incident report-->
+
+<div *ngIf="isDamaged" class="question-holder">
+	<p class="qn-group">Kindly make a Damage or Incident Report</p>
+	<button class="back-button" (click)="back()">Back</button>&nbsp;
+</div>
+
+<!--Switch on the equipment to confirm whether it is getting on-->
+
+<div *ngIf="power" class="question-holder">
+	<p class="qn-group">Switch on the equipment and confirm whether the equipment is getting ON</p>
+	<p style="color: red; margin-left: 20px;">Attention: Close the Lid of the machine to start</p>
+	<button class="back-button" (click)="checkDisplay()">Yes</button>&nbsp;
+	<button class="back-button" (click)="checkCord()">No</button>
+	<button class="back-button" (click)="checkDamageStatus()">Back</button>
+</div>
+
+<!--Check cord damage-->
+
+<div *ngIf="cordDamage" class="question-holder">
+	<p class="qn-group">Check the Power cord for any damage or burns</p>
+	<button class="back-button" (click)="replaceCord()">Yes</button>&nbsp;
+	<button class="back-button" (click)="checkFuse()">No</button>
+	<button class="back-button" (click)="powerOn()">Back</button>
+</div>
+
+<!--Replace power cord, if no power check fuse else check display-->
+
+<div *ngIf="repCord" class="question-holder">
+	<p class="qn-group">Replace the power cord with a new one and Check Power ON</p>
+	<button class="back-button" (click)="checkFuse()">No</button>
+	<button class="back-button" (click)="checkDisplay()">Yes</button>
+	<button class="back-button" (click)="checkCord()">Back</button>
+</div>
+
+<!--Check inlet fuse for continuity, if no power check if fuse is burnt else check display-->
+
+<div *ngIf="fuseOK && !selectDevices" class="question-holder">
+	<p class="qn-group">Check the Inlet AC fuses for continuity and Check Power ON</p><br>
+	<div class="image-group">
+		<img src="assets/{{ barcode }}-fuse.jpg" class="device-image" alt="" loading="lazy"><br>
+	</div>
+	<button class="back-button" (click)="checkDeviceFuse()">No</button>
+	<button class="back-button" (click)="checkDisplay()">Yes</button>
+	<button class="back-button" (click)="replaceCord()">Back</button>
+</div>
+
+<div *ngIf="fuseOK && selectDevices" class="question-holder">
+	<p class="qn-group">Check the Inlet AC fuses for continuity and Check Power ON</p><br>
+	<div class="image-group">
+	<!--<img src="assets/{{ device }}-fuse.jpg" class="device-image" alt="" loading="lazy">-->
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-fuse.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="checkDeviceFuse()">No</button>
+	<button class="back-button" (click)="checkDisplay()">Yes</button>
+	<button class="back-button" (click)="replaceCord()">Back</button>
+</div>
+
+<!--If fuse not burnt check display, else change fuse-->
+
+<div *ngIf="isFuseBurnt" class="question-holder">
+	<p class="qn-group">Confirm Whether the AC fuses are burnt</p>
+	<button class="back-button" (click)="checkDisplay()">No</button>
+	<button class="back-button" (click)="changeFuse()">Yes</button>
+	<button class="back-button" (click)="checkFuse()">Back</button>
+</div>
+
+<div *ngIf="isChangeFuse" class="question-holder">
+	<p class="qn-group">Change fuse and check power ON</p><br>
+	<div class="image-group">
+		<!--<img src="assets/{{ device }}-fuse.jpg" class="device-image" alt="" loading="lazy">-->
+		<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-fuse-replace.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+		</video> 
+		<br>
+	</div>
+	<button class="back-button" (click)="openPanel()">No</button>
+	<button class="back-button" (click)="checkDisplay()">Yes</button>
+	<button class="back-button" (click)="checkDeviceFuse()">Back</button>
+</div>
+
+<div *ngIf="displayStatus" class="question-holder">
+	<p class="qn-group">Confirm Whether the Display is ON</p>
+	<button class="back-button" (click)="openPanel()">No</button>
+	<button class="back-button" (click)="changeRPM()">Yes</button>
+	<button class="back-button" (click)="powerOn()">Back</button>
+</div>
+ 
+<div *ngIf="isOpenPanel" class="question-holder">
+	<p class="qn-group">Open the Front panel of the Equipment carefully as shown in the below Video</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="checkTransformer()">Continue</button>
+	<button class="back-button" (click)="checkDisplay()">Back</button>
+</div>
+ 
+<div *ngIf="isTransformer" class="question-holder">
+	<p class="qn-group">Open the Front panel as shown in the video and confirm for any loose connections or transformer burnt</p>
+	<div class="image-group">
+		<img src="assets/{{ device }}-transformer.jpg" class="device-image" alt="" loading="lazy">
+	</div>
+	<button class="back-button" (click)="checkVoltage()">No</button>
+	<button class="back-button" (click)="replaceTrans()">Yes</button>
+	<button class="back-button" (click)="openPanel()">Back</button>
+</div>
+
+<div *ngIf="isReplaceTransformer" class="question-holder">
+	<p class="qn-group">Replace the transformer with a new one and close the Equipment as shown in the videos below</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-replace-trans.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel-close.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<div *ngIf="!afterCheckVoltage" class="button-condition">
+	<button class="back-button" (click)="checkTransformer()">Continue</button>
+	</div>
+	<div *ngIf="afterCheckVoltage" class="button-condition">
+	<button class="back-button" (click)="checkDisplay()">Continue</button>
+	</div>
+	<button class="back-button" (click)="checkDisplay()">Back</button>
+</div>
+
+<div *ngIf="isCheckVoltage" class="question-holder">
+	<p class="qn-group">Check the input and output voltage of transformer and confirm for any variations in the voltage</p><br>
+	<p class="subhead">Video for opening panel</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Image for checking voltage</p><br>
+	<div class="image-group">
+		<img src="assets/{{ device }}-voltage.jpg" class="device-image" alt="" loading="lazy">
+	<br>
+	</div>
+	<p class="subhead">Video for checking voltage</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-voltage.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="changeCB()">No</button>
+	<button class="back-button" (click)="replaceTrans()">Yes</button>
+	<button class="back-button" (click)="checkTransformer()">Back</button>
+</div>
+
+<div *ngIf="isCB" class="question-holder">
+	<p class="qn-group">Kindly change the Control Board and close the Equipment</p><br>
+	<p class="subhead">Image of control board</p><br>
+	<div class="image-group">
+		<img src="assets/{{ device }}-cb.jpg" class="device-image" alt="" loading="lazy">
+	<br>
+	</div>
+	<p class="subhead">Video for checking control board</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-cb.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Video for closing equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel-close.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="changeRPM()">Continue</button>
+	<button class="back-button" (click)="checkVoltage()">Back</button>
+</div>
+ 
+<div *ngIf="isChangeRPM" class="question-holder">
+	<p class="qn-group">Confirm Whether there is change in RPM</p>
+	<button class="back-button" (click)="checkPotentiometer()">No</button>
+	<button class="back-button" (click)="checkCarbon()">Yes</button>
+	<button class="back-button" (click)="checkDisplay()">Back</button>
+</div>
+
+<div *ngIf="isPotentiometer" class="question-holder">
+	<p class="qn-group">Kindly open the front panel and confirm whether there is any carbon formation on the Potentiometer</p><br>
+	<p class="subhead">Video for opening the Equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Image of identification</p><br>
+	<div class="image-group">
+		<img src="assets/{{ device }}-potentio.jpg" class="device-image" alt="" loading="lazy">
+	<br>
+	</div>
+	<p class="subhead">Images of carbon Formation on Potentiometer</p><br>
+	<div class="image-group">
+		<img src="assets/{{ device }}-potentio-carbon.jpg" class="device-image" alt="" loading="lazy">
+	<br>
+	</div>
+	<button class="back-button" (click)="replacePotentiometer()">No</button>
+	<button class="back-button" (click)="cleanCarbon()">Yes</button>
+	<button class="back-button" (click)="changeRPM()">Back</button>
+</div>
+
+<div *ngIf="isCleanCarbon" class="question-holder">
+	<p class="qn-group">Clean the carbon formation on potentiometer with the sand paper and close the equipment</p><br>
+	<p class="subhead">Video for cleaning carbon</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Video for closing the Equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel-close.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="replacePotentiometer()">No</button>
+	<button class="back-button" (click)="checkCarbon()">Yes</button>
+	<button class="back-button" (click)="checkPotentiometer()">Back</button>
+</div>
+
+<div *ngIf="isReplacePotentiometer" class="question-holder">
+	<p class="qn-group">Replace the Potentiometer with a new one and close the Equipment</p><br>
+	<p class="subhead">Video for Replacing Potentiometer</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-replace-potentio.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Video for closing the Equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel-close.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="checkCarbon()">Continue</button>
+	<button class="back-button" (click)="changeRPM()">Back</button>
+</div>
+
+<div *ngIf="isCarbon" class="question-holder">
+	<p class="qn-group">Kindly Check the Carbon Brushes near the Motor and confirm whether the carbon brushes are worn out</p>
+	<p class="subhead">Video for opening the Equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Images of carbon Formation on Potentiometer</p><br>
+	<div class="image-group">
+		<img src="assets/{{ device }}-carbon-brush.JPG" class="device-image" alt="" loading="lazy">
+	<br>
+	</div>
+	<button class="back-button" (click)="checkVibration()">No</button>
+	<button class="back-button" (click)="replaceCarbon()">Yes</button>
+	<button class="back-button" (click)="checkCarbon()">Back</button>
+</div>
+
+<div *ngIf="isReplaceCarbon" class="question-holder">
+	<p class="qn-group">Kindly replace the Carbon Brushes with the new one and close the Equipment</p>
+	<p class="subhead">Video for opening the Equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Video for replacing carbon brushes</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-replace-carbon.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="checkVibration()">Continue</button>
+	<button class="back-button" (click)="checkCarbon()">Back</button>
+</div>
+
+<div *ngIf="isVibration" class="question-holder">
+	<p class="qn-group">Confirm whether there is any vibration motion during the motor rotation</p>
+	<button class="back-button" (click)="checkLid()">No</button>
+	<button class="back-button" (click)="replaceMotor()">Yes</button>
+	<button class="back-button" (click)="replaceCarbon()">Back</button>
+</div>
+
+<div *ngIf="isReplaceMotor" class="question-holder">
+	<p class="qn-group">Please replace the motor with the new one and close the Equipment</p>
+	<p class="subhead">Video for replacing motor</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-replace-motor.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Video for closing equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel-close.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="checkLid()">Continue</button>
+	<button class="back-button" (click)="checkVibration()">Back</button>
+</div>
+
+<div *ngIf="isLid" class="question-holder">
+	<p class="qn-group">Confirm whether the Lid is getting interlocked properly</p>
+	<button class="back-button" (click)="changeSensor()">No</button>
+	<button class="back-button" (click)="completeYesCheck()">Yes</button>
+	<button class="back-button" (click)="replaceMotor()">Back</button>
+</div>
+
+<div *ngIf="isChangeSensor" class="question-holder">
+	<p class="qn-group">Kindly open the equipment then change the Door lock sensor and close the Equipment</p>
+	<p class="subhead">Video for opening the equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Images for door lock sensor</p><br>
+	<div class="image-group">
+		<img src="assets/{{ device }}-sensor.jpg" class="device-image" alt="" loading="lazy">
+	<br>
+	</div>
+	<p class="subhead">Video for replacement of sensor</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-sensor.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<p class="subhead">Video for closing equipment</p><br>
+	<div class="image-group">
+	<video width="250" height="250" controls>
+		<source src="assets/{{ device }}-panel-close.mp4" type="video/mp4">
+		Your browser does not support the video tag.
+	</video> 
+	<br>
+	</div>
+	<button class="back-button" (click)="completeYesCheck()">Continue</button>
+	<button class="back-button" (click)="checkLid()">Back</button>
+</div>
+
+<div *ngIf="isYesComplete" class="question-holder">
+	<p style="margin-left: 20px; font-size: 24px; color: red;">FOR ANY OTHER ASSISTANCE, KINDLY CONTACT THE TECHNICAL TEAM</p>
+	<button class="back-button" (click)="showDevices()">Finish</button>
+</div>
